@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Battleship - Register/Login</title>
-    <link rel="stylesheet" href="..\css\loginPageStyle.css">
+    <title>Battleship - Login</title>
+    <link rel="stylesheet" href="../css/loginPageStyle.css">
 </head>
 <body>
     <div class="container">
@@ -15,7 +15,7 @@
             <button type="submit">Login</button>
         </form>
         <div class="footer">
-            <p>Don’t have an account? <a href="/register.html">Register here</a></p>
+            <p>Don’t have an account? <a href="registerPage.html">Register here</a></p>
         </div>
     </div>
 
@@ -39,8 +39,7 @@
 
                 if (response.ok) {
                     alert('Login successful!');
-                    // Redirect to game page or dashboard
-                    window.location.href = '/game.html';
+                    window.location.href = '/game.html'; // Redirect to game page
                 } else {
                     alert(data.message || 'Login failed');
                 }
