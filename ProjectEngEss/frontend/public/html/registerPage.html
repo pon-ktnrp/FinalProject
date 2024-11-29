@@ -22,7 +22,6 @@
     <script>
         document.getElementById('registerForm').addEventListener('submit', async function(event) {
             event.preventDefault();
-
             const username = document.getElementById('regUsername').value;
             const password = document.getElementById('regPassword').value;
 
@@ -39,7 +38,7 @@
 
                 if (response.ok) {
                     alert('Successfully Registered');
-                    window.location.href = 'login.html'; // Redirect to login page after successful registration
+                    window.location.href = 'loginPage.html'; // Redirect to login page
                 } else {
                     alert(data.message || 'Registration failed');
                 }

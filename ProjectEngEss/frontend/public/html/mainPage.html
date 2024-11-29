@@ -3,15 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="..\css\mainPageStyle.css">
-    <title>Battleship Game</title>
+    <title>Battleship - Main Page</title>
+    <link rel="stylesheet" href="../css/mainPageStyle.css">
 </head>
 <body>
-    <div class="container">
-        <h1 class="logo">BattleShip</h1>
-        <button id="create-room" class="btn">Create Room</button>
-        <button id="join-room" class="btn">Join Room</button>
+    <div class="main-container">
+        <h1 class="title">Battleship</h1>
+        <div class="button-container">
+            <button id="createRoom" onclick="createRoom()">Create Room</button>
+            <button id="joinRoom" onclick="joinRoom()">Join Room</button>
+        </div>
     </div>
-    <script src="scripts/main.js"></script>
+
+    <script>
+        function createRoom() {
+            alert("Create Room functionality not yet implemented.");
+            // Add logic for room creation
+        }
+
+        function joinRoom() {
+            alert("Join Room functionality not yet implemented.");
+            // Add logic for joining a room
+        }
+    </script>
 </body>
 </html>
