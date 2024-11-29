@@ -1,8 +1,10 @@
-const express = require('express');
-const { createRoom, joinRoom } = require('../controllers/gameController');
+import express from 'express';
+
 const router = express.Router();
 
-router.post('/create-room', createRoom);
-router.post('/join-room', joinRoom);
+// Define your game routes here
+router.get('/', (req, res) => {
+    res.send('Game Routes Working!');
+});
 
-module.exports = router;
+export default router;
