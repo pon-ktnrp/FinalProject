@@ -5,22 +5,19 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
-    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="../css/signup.css">
 </head>
 <body>
-    
-    <h1>Sign Up</h1>
-
-    <form action="/signup" method="POST">
-        <label for="name">Username:</label>
-        <input type="text" id="name" name="name" required>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <button type="submit">Sign Up</button>
-      </form>
-      
-
-    <a href="/">Go back to login page</a>
-
+    <div class="container">
+        <h1>Register</h1>
+        <form action="/signup" method="POST">
+            <input type="text" id="regUsername" placeholder="Username" name="name" required>
+            <input type="password" id="regPassword" placeholder="Password" name="password" required>
+            <button type="submit">Register</button>
+        </form>
+        <div class="footer">
+            <p>Already have an account? <a href="/">Login here</a></p>
+        </div>
+    </div>
 </body>
 </html>
