@@ -10,6 +10,7 @@ const io = socketio(server)
 // Set static folder
 app.use(express.static(path.join(__dirname, "frontend/public/html")))
 app.use(express.static(path.join(__dirname, "frontend/public/css")))
+app.use(express.static(path.join(__dirname, "frontend/public/scripts")))
 
 // Start server
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
