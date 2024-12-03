@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let enemyReady = false
   let allShipsPlaced = false
   let shotFired = -1
+
   //Ships
   const shipArray = [
     {
@@ -51,14 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
       name: 'battleship',
       directions: [
         [0, 1, 2, 3],
-        [0, width, width*2, width*3]
+        [0, width, width * 2, width * 3]
       ]
     },
     {
       name: 'carrier',
       directions: [
         [0, 1, 2, 3, 4],
-        [0, width, width*2, width*3, width*4]
+        [0, width, width * 2, width * 3, width * 4]
       ]
     },
   ]
@@ -66,12 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
   createBoard(userGrid, userSquares)
   createBoard(computerGrid, computerSquares)
 
-  // Select Player Mode
-  if (gameMode === 'singlePlayer') {
-    startSinglePlayer()
-  } else {
-    startMultiPlayer()
-  }
+  // Multiplayer Mode Only
+  startMultiPlayer()
 
   // Multiplayer
   function startMultiPlayer() {
@@ -83,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         infoDisplay.innerHTML = "Sorry, the server is full"
       } else {
         playerNum = parseInt(num)
-        if(playerNum === 1) currentPlayer = "enemy"
+        if (playerNum === 1) currentPlayer = "enemy"
 
         console.log(playerNum)
 
@@ -111,10 +108,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check player status
     socket.on('check-players', players => {
       players.forEach((p, i) => {
-        if(p.connected) playerConnectedOrDisconnected(i)
-        if(p.ready) {
+        if (p.connected) playerConnectedOrDisconnected(i)
+        if (p.ready) {
           playerReady(i)
-          if(i !== playerReady) enemyReady = true
+          if (i !== playerReady) enemyReady = true
         }
       })
     })
@@ -126,8 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ready button click
     startButton.addEventListener('click', () => {
-      if(allShipsPlaced) playGameMulti(socket)
-      else infoDisplay.innerHTML = "Please place all ships"
+      if (allShipsPlaced) playGameMulti(socket)
+      else turnDisplay.innerHTML = "Please place all ships"
     })
 
     // Setup event listeners for firing
@@ -138,13 +135,13 @@ document.addEventListener('DOMContentLoaded', () => {
           turnDisplay.innerHTML = "You've already shot here! Try a different square.";
           return;
         }
-    
+
         if (currentPlayer === 'user' && ready && enemyReady) {
           shotFired = square.dataset.id;
           socket.emit('fire', shotFired);
         }
       });
-    })
+    });
 
     // On Fire Received
     socket.on('fire', id => {
@@ -163,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function playerConnectedOrDisconnected(num) {
       let player = `.p${parseInt(num) + 1}`
       document.querySelector(`${player} .connected`).classList.toggle('active')
-      if(parseInt(num) === playerNum) document.querySelector(player).style.fontWeight = 'bold'
+      if (parseInt(num) === playerNum) document.querySelector(player).style.fontWeight = 'bold'
     }
   }
 
@@ -183,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   //Create Board
   function createBoard(grid, squares) {
-    for (let i = 0; i < width*width; i++) {
+    for (let i = 0; i < width * width; i++) {
       const square = document.createElement('div')
       square.dataset.id = i
       grid.appendChild(square)
@@ -269,7 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function dragLeave() {
     // console.log('drag leave')
   }
-
   function dragDrop() {
     let shipNameWithLastId = draggedShip.lastChild.id;
     let shipClass = shipNameWithLastId.slice(0, -2);
@@ -343,18 +339,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Game Logic for MultiPlayer
   function playGameMulti(socket) {
     setupButtons.style.display = 'none'
-    if(isGameOver) return
-    if(!ready) {
+    if (isGameOver) return
+    if (!ready) {
       socket.emit('player-ready')
       ready = true
       playerReady(playerNum)
     }
 
-    if(enemyReady) {
-      if(currentPlayer === 'user') {
+    if (enemyReady) {
+      if (currentPlayer === 'user') {
         turnDisplay.innerHTML = 'Your Go'
       }
-      if(currentPlayer === 'enemy') {
+      if (currentPlayer === 'enemy') {
         turnDisplay.innerHTML = "Enemy's Go"
       }
     }
@@ -402,33 +398,24 @@ document.addEventListener('DOMContentLoaded', () => {
   let carrierCount = 0
 
   function revealSquare(classList) {
-    const enemySquare = computerGrid.querySelector(`div[data-id='${shotFired}']`);
-    const obj = Object.values(classList);
-  
+    const enemySquare = computerGrid.querySelector(`div[data-id='${shotFired}']`)
+    const obj = Object.values(classList)
     if (!enemySquare.classList.contains('boom') && currentPlayer === 'user' && !isGameOver) {
-      if (obj.includes('destroyer')) destroyerCount++;
-      if (obj.includes('submarine')) submarineCount++;
-      if (obj.includes('cruiser')) cruiserCount++;
-      if (obj.includes('battleship')) battleshipCount++;
-      if (obj.includes('carrier')) carrierCount++;
+      if (obj.includes('destroyer')) destroyerCount++
+      if (obj.includes('submarine')) submarineCount++
+      if (obj.includes('cruiser')) cruiserCount++
+      if (obj.includes('battleship')) battleshipCount++
+      if (obj.includes('carrier')) carrierCount++
     }
-  
     if (obj.includes('taken')) {
-      enemySquare.classList.add('boom');
-      // Stay on user's turn if they hit
-      checkForWins();
-      if (!isGameOver) {
-        turnDisplay.innerHTML = "Nice shot! Go again.";
-        return;
-      }
+      enemySquare.classList.add('boom')
     } else {
-      enemySquare.classList.add('miss');
-      // Switch to enemy turn only if the shot is a miss
-      currentPlayer = 'enemy';
-      if (gameMode === 'singlePlayer') playGameSingle();
+      enemySquare.classList.add('miss')
     }
+    checkForWins()
+    currentPlayer = 'enemy'
+    if(gameMode === 'singlePlayer') playGameSingle()
   }
-  
 
   let cpuDestroyerCount = 0
   let cpuSubmarineCount = 0
