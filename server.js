@@ -1,110 +1,90 @@
-const http = require('http');
-const socketIo = require('socket.io');
-const app = require('./backend/src/app');
+const express = require('express')
+const path = require('path')
+const http = require('http')
+const PORT = process.env.PORT || 3000
+const socketio = require('socket.io')
+const app = express()
+const server = http.createServer(app)
+const io = socketio(server)
 
-const server = http.createServer(app);
-const io = socketIo(server);
+// Set static folder
+app.use(express.static(path.join(__dirname, "frontend/public/html")))
+app.use(express.static(path.join(__dirname, "frontend/public/css")))
 
-let players = []; // Store connected players
-let playerStates = {}; // Track each player's ship placement and turns
-let countdownTimer = null; // To handle the countdown
-let currentTurn = 0; // Keep track of whose turn it is (0 for player 1, 1 for player 2)
+// Start server
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
-// Ship positions for each player
-const shipPositions = {
-  // { playerId: [shipIndex1, shipIndex2, ...] }
-};
+// Handle a socket connection request from web client
+const connections = [null, null]
 
-io.on('connection', (socket) => {
-  console.log(`A user connected: ${socket.id}`);
+io.on('connection', socket => {
+  // console.log('New WS Connection')
 
-  if (players.length < 2) {
-    players.push(socket.id);
-    playerStates[socket.id] = {
-      ships: [],
-      ready: false,
-      turn: false,
-      attacks: [],
-      sunk: 0
-    };
-
-    socket.emit('player-assigned', { playerId: socket.id });
-  } else {
-    socket.emit('game-full');
+  // Find an available player number
+  let playerIndex = -1;
+  for (const i in connections) {
+    if (connections[i] === null) {
+      playerIndex = i
+      break
+    }
   }
 
-  // Handle ship placement
-  socket.on('place-ship', (index) => {
-    if (playerStates[socket.id].ships.length < 5) {
-      playerStates[socket.id].ships.push(index);
+  // Tell the connecting client what player number they are
+  socket.emit('player-number', playerIndex)
 
-      // Add ship positions to the shipPositions object
-      if (playerStates[socket.id].ships.length === 5) {
-        shipPositions[socket.id] = playerStates[socket.id].ships; // Store ships
+  console.log(`Player ${playerIndex} has connected`)
 
-        playerStates[socket.id].ready = true;
-        socket.emit('ready', { message: 'Ships placed!' });
+  // Ignore player 3
+  if (playerIndex === -1) return
 
-        if (players.every((id) => playerStates[id]?.ready)) {
-          io.emit('game-ready', { message: 'Both players are ready! Starting countdown...' });
+  connections[playerIndex] = false
 
-          // Start countdown from 5 to 0
-          let countdown = 5;
-          countdownTimer = setInterval(() => {
-            io.emit('countdown', { countdown });
-            if (countdown === 0) {
-              clearInterval(countdownTimer);
-              io.emit('game-start', { message: 'Game started! Player 1, it\'s your turn to attack!' });
-              playerStates[players[0]].turn = true; // Player 1 goes first
-            }
-            countdown--;
-          }, 1000);
-        }
-      }
-    }
-  });
+  // Tell eveyone what player number just connected
+  socket.broadcast.emit('player-connection', playerIndex)
 
-  // Handle attack logic
-  socket.on('attack', (targetIndex) => {
-    const attackingPlayer = socket.id;
-    const defendingPlayer = players[(players.indexOf(attackingPlayer) + 1) % 2];
-
-    // Check if it's the player's turn
-    if (playerStates[attackingPlayer].turn) {
-      if (shipPositions[defendingPlayer] && shipPositions[defendingPlayer].includes(targetIndex)) {
-        // Attack hits
-        playerStates[defendingPlayer].sunk++;
-        playerStates[attackingPlayer].attacks.push(targetIndex);
-        io.emit('hit', { attackingPlayer, targetIndex });
-
-        // Check if the defending player has lost all ships
-        if (playerStates[defendingPlayer].sunk === 5) {
-          io.emit('game-over', { winner: attackingPlayer });
-        }
-      } else {
-        // Attack misses
-        playerStates[attackingPlayer].attacks.push(targetIndex);
-        io.emit('miss', { attackingPlayer, targetIndex });
-      }
-
-      // Switch turn
-      playerStates[attackingPlayer].turn = false;
-      playerStates[defendingPlayer].turn = true;
-      io.emit('turn-change', { currentPlayer: defendingPlayer });
-    } else {
-      socket.emit('not-your-turn', { message: 'It\'s not your turn!' });
-    }
-  });
-
-  // Handle disconnection
+  // Handle Diconnect
   socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
-    players = players.filter((id) => id !== socket.id);
-    delete playerStates[socket.id];
-  });
-});
+    console.log(`Player ${playerIndex} disconnected`)
+    connections[playerIndex] = null
+    //Tell everyone what player numbe just disconnected
+    socket.broadcast.emit('player-connection', playerIndex)
+  })
 
-const PORT = 3000;
-server.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+  // On Ready
+  socket.on('player-ready', () => {
+    socket.broadcast.emit('enemy-ready', playerIndex)
+    connections[playerIndex] = true
+  })
+
+  // Check player connections
+  socket.on('check-players', () => {
+    const players = []
+    for (const i in connections) {
+      connections[i] === null ? players.push({connected: false, ready: false}) : players.push({connected: true, ready: connections[i]})
+    }
+    socket.emit('check-players', players)
+  })
+
+  // On Fire Received
+  socket.on('fire', id => {
+    console.log(`Shot fired from ${playerIndex}`, id)
+
+    // Emit the move to the other player
+    socket.broadcast.emit('fire', id)
+  })
+
+  // on Fire Reply
+  socket.on('fire-reply', square => {
+    console.log(square)
+
+    // Forward the reply to the other player
+    socket.broadcast.emit('fire-reply', square)
+  })
+
+  // Timeout connection
+  setTimeout(() => {
+    connections[playerIndex] = null
+    socket.emit('timeout')
+    socket.disconnect()
+  }, 600000) // 10 minute limit per player
+})
