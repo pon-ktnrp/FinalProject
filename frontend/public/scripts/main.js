@@ -1,11 +1,10 @@
-const socket = io(); // Connect to the server
+const socket = io();
 const playerGrid = document.getElementById('player-grid');
 const enemyGrid = document.getElementById('enemy-grid');
 const statusText = document.getElementById('status');
-const startGameButton = document.getElementById('start-game');
 
+let playerId;
 let shipsPlaced = 0;
-let gameStarted = false;
 
 // Create 10x10 grids
 function createGrid(gridElement) {
@@ -19,33 +18,29 @@ function createGrid(gridElement) {
 createGrid(playerGrid);
 createGrid(enemyGrid);
 
+// Assign player ID from server
+socket.on('player-assigned', (data) => {
+  playerId = data.playerId;
+  statusText.textContent = 'Place your ships (5 total)';
+});
+
+socket.on('game-full', () => {
+  alert('The game is full. Please try again later.');
+});
+
 // Handle ship placement
 playerGrid.addEventListener('click', (e) => {
-  if (e.target.tagName === 'DIV' && shipsPlaced < 5 && !gameStarted) {
-    e.target.style.backgroundColor = 'green'; // Mark as a ship
+  if (e.target.tagName === 'DIV' && shipsPlaced < 5) {
+    e.target.style.backgroundColor = 'green';
+    socket.emit('place-ship', parseInt(e.target.dataset.index, 10));
     shipsPlaced++;
     if (shipsPlaced === 5) {
-      statusText.textContent = 'Waiting for another player...';
-      socket.emit('ships-placed');
+      statusText.textContent = 'Waiting for other player...';
     }
   }
 });
 
-// Handle enemy grid clicks
-enemyGrid.addEventListener('click', (e) => {
-  if (e.target.tagName === 'DIV' && gameStarted) {
-    e.target.style.backgroundColor = 'red'; // Simulate a hit
-    socket.emit('attack', e.target.dataset.index);
-  }
-});
-
-// Socket.IO events
-socket.on('game-started', () => {
-  gameStarted = true;
-  statusText.textContent = 'Game started! Attack the enemy!';
-});
-
-socket.on('attack-result', ({ index, hit }) => {
-  const cell = playerGrid.children[index];
-  cell.style.backgroundColor = hit ? 'red' : 'blue';
+// Notify when the game starts
+socket.on('game-start', (data) => {
+  statusText.textContent = data.message;
 });
