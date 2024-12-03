@@ -5,34 +5,48 @@ const app = require('./backend/src/app');
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const players = [];
-const grids = {}; // Stores player grids
+let players = []; // Store connected players
+let playerStates = {}; // Track each player's ship placement and turns
 
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+  console.log(`A user connected: ${socket.id}`);
 
-  players.push(socket.id);
-  grids[socket.id] = [];
+  // Add the new player to the game
+  if (players.length < 2) {
+    players.push(socket.id);
+    playerStates[socket.id] = {
+      ships: [],
+      ready: false,
+    };
 
-  if (players.length === 2) {
-    io.emit('game-started');
+    socket.emit('player-assigned', { playerId: socket.id });
+  } else {
+    socket.emit('game-full');
   }
 
-  socket.on('ships-placed', () => {
-    console.log(`Player ${socket.id} placed ships`);
+  // Handle ship placement
+  socket.on('place-ship', (index) => {
+    if (playerStates[socket.id].ships.length < 5) {
+      playerStates[socket.id].ships.push(index);
+
+      // Check if the player is ready
+      if (playerStates[socket.id].ships.length === 5) {
+        playerStates[socket.id].ready = true;
+        socket.emit('ready', { message: 'Ships placed!' });
+
+        // Notify both players when the game starts
+        if (players.every((id) => playerStates[id]?.ready)) {
+          io.emit('game-start', { message: 'All players are ready!' });
+        }
+      }
+    }
   });
 
-  socket.on('attack', (index) => {
-    const opponent = players.find((id) => id !== socket.id);
-    const hit = grids[opponent]?.includes(parseInt(index, 10));
-    socket.emit('attack-result', { index, hit });
-  });
-
+  // Handle disconnection
   socket.on('disconnect', () => {
-    console.log('A user disconnected:', socket.id);
-    const index = players.indexOf(socket.id);
-    if (index !== -1) players.splice(index, 1);
-    delete grids[socket.id];
+    console.log(`User disconnected: ${socket.id}`);
+    players = players.filter((id) => id !== socket.id);
+    delete playerStates[socket.id];
   });
 });
 
