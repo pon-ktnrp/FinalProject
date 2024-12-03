@@ -512,3 +512,27 @@ document.addEventListener('DOMContentLoaded', () => {
     startButton.removeEventListener('click', playGameSingle)
   }
 })
+
+// handle room creation and joining
+document.getElementById('create-room-btn').addEventListener('click', async () => {
+  const response = await fetch('/create-room', { method: 'POST' });
+  const data = await response.json();
+  alert(`Room Created! Code: ${data.roomCode}`);
+});
+
+document.getElementById('join-room-btn').addEventListener('click', async () => {
+  const roomCode = document.getElementById('room-code-input').value;
+  const playerName = prompt("Enter your name:");
+  const response = await fetch('/join-room', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomCode, playerName })
+  });
+
+  if (response.ok) {
+      alert('Joined room!');
+  } else {
+      const error = await response.json();
+      alert(error.message);
+  }
+});

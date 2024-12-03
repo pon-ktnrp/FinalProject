@@ -6,6 +6,27 @@ const socketio = require('socket.io')
 const app = express()
 const server = http.createServer(app)
 const io = socketio(server)
+let rooms = {}; // Store room data in-memory
+
+app.use(express.json())
+
+// Create a room
+app.post('/create-room', (req, res) => {
+    const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    rooms[roomCode] = { players: [] };
+    res.json({ roomCode });
+});
+
+// Join a room
+app.post('/join-room', (req, res) => {
+  const { roomCode, playerName } = req.body;
+  if (rooms[roomCode] && rooms[roomCode].players.length < 2) {
+      rooms[roomCode].players.push(playerName);
+      res.json({ success: true, message: 'Joined room' });
+  } else {
+      res.status(400).json({ success: false, message: 'Room full or not found' });
+  }
+});
 
 // Set static folder
 app.use(express.static(path.join(__dirname, "frontend/public/html")))
