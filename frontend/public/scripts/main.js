@@ -515,10 +515,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // handle room creation and joining
 document.getElementById('create-room-btn').addEventListener('click', async () => {
-  const response = await fetch('/create-room', { method: 'POST' });
-  const data = await response.json();
-  alert(`Room Created! Code: ${data.roomCode}`);
+  try {
+      const response = await fetch('/create-room', { method: 'POST' });
+      if (!response.ok) {
+          throw new Error('Failed to create room');
+      }
+      const data = await response.json();
+      const roomCode = data.roomCode;
+
+      // Redirect to multiplayer.html with room code as a query parameter
+      window.location.href = `./multiplayer.html?roomCode=${roomCode}`;
+  } catch (error) {
+      console.error('Error creating room:', error);
+      alert('Could not create room. Please try again.');
+  }
 });
+
 
 document.getElementById('join-room-btn').addEventListener('click', async () => {
   const roomCode = document.getElementById('room-code-input').value;
