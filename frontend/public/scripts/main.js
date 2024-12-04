@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
   // Single Player
-  function startSinglePlayer() {
+  /*function startSinglePlayer() {
     generate(shipArray[0])
     generate(shipArray[1])
     generate(shipArray[2])
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setupButtons.style.display = 'none'
       playGameSingle()
     })
-  }
+  }*/
 
   //Create Board
   function createBoard(grid, squares) {
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   //Draw the computers ships in random locations
-  function generate(ship) {
+  /*function generate(ship) {
     let randomDirection = Math.floor(Math.random() * ship.directions.length)
     let current = ship.directions[randomDirection]
     if (randomDirection === 0) direction = 1
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!isTaken && !isAtRightEdge && !isAtLeftEdge) current.forEach(index => computerSquares[randomStart + index].classList.add('taken', ship.name))
 
     else generate(ship)
-  }
+  }*/
   
 
   //Rotate the ships
@@ -391,7 +391,7 @@ function playerReady(num) {
 }
 
   // Game Logic for Single Player
-  function playGameSingle() {
+  /*function playGameSingle() {
     if (isGameOver) return;
   
     if (currentPlayer === 'user') {
@@ -417,7 +417,7 @@ function playerReady(num) {
       turnDisplay.innerHTML = "Computer's Go";
       setTimeout(enemyGo, 1000);
     }
-  }
+  }*/
   
 
   let destroyerCount = 0
@@ -436,6 +436,22 @@ function playerReady(num) {
       if (obj.includes('battleship')) battleshipCount++
       if (obj.includes('carrier')) carrierCount++
     }
+
+    if (obj.includes('taken')) {
+      enemySquare.classList.add('boom');
+      // Stay on user's turn if they hit
+      checkForWins();
+      if (!isGameOver) {
+        turnDisplay.innerHTML = "Nice shot! Go again.";
+        return;
+      }
+    } else {
+      enemySquare.classList.add('miss');
+      // Switch to enemy turn only if the shot is a miss
+      currentPlayer = 'enemy';
+      //if (gameMode === 'singlePlayer') playGameSingle();
+    }
+    /*
     if (obj.includes('taken')) {
       enemySquare.classList.add('boom')
     } else {
@@ -443,7 +459,7 @@ function playerReady(num) {
     }
     checkForWins()
     currentPlayer = 'enemy'
-    if(gameMode === 'singlePlayer') playGameSingle()
+    if(gameMode === 'singlePlayer') playGameSingle()*/
   }
 
   let cpuDestroyerCount = 0
@@ -468,6 +484,7 @@ function playerReady(num) {
     currentPlayer = 'user'
     turnDisplay.innerHTML = 'Your Go'
   }
+
 
   function checkForWins() {
     let enemy = 'computer'
